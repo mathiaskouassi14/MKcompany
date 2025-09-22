@@ -41,6 +41,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const clientNavigation = [
     { name: 'Dashboard', href: '/dashboard', icon: Home },
+    { name: 'Inscription LLC', href: '/register', icon: FileText },
     { name: 'Documents', href: '/documents', icon: FileText },
     { name: 'Paiements', href: '/payments', icon: CreditCard },
     { name: 'Paramètres', href: '/settings', icon: Settings },

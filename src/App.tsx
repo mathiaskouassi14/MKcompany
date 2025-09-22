@@ -11,6 +11,7 @@ import { SettingsPage } from './pages/SettingsPage'
 import { AdminClientsPage } from './pages/AdminClientsPage'
 import { AdminAnalyticsPage } from './pages/AdminAnalyticsPage'
 import { UnauthorizedPage } from './pages/UnauthorizedPage'
+import { RegistrationPage } from './pages/RegistrationPage'
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
+            <Route path="/register" element={<RegistrationPage />} />
             
             {/* Routes protégées client */}
             <Route 

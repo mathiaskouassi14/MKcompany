@@ -1,4 +1,5 @@
 import { useAdminData } from '../hooks/useAdminData'
+import { useAdminRegistrations } from '../hooks/useRegistration'
 import { Navbar } from '../components/layout/Navbar'
 import { Button } from '../components/ui/Button'
 import { Users, Activity, Settings, AlertTriangle, TrendingUp, Database, Shield, Zap, RefreshCw } from 'lucide-react'
@@ -6,6 +7,7 @@ import { motion } from 'framer-motion'
 
 export function AdminDashboard() {
   const { stats, loading, error, actions } = useAdminData()
+  const { stats: registrationStats } = useAdminRegistrations()
 
   const adminStats = [
     { 
@@ -34,7 +36,7 @@ export function AdminDashboard() {
     },
     { 
       name: 'LLC en cours', 
-      value: stats?.pending_applications?.toString() || '0', 
+      value: registrationStats?.pending_registrations?.toString() || '0', 
       icon: Database, 
       color: 'text-yellow-400',
       bg: 'bg-yellow-500/10',
