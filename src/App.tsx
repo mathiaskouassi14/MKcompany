@@ -6,6 +6,7 @@ import { UserDashboard } from './pages/UserDashboard'
 import { UserProfile } from './pages/UserProfile'
 import { AdminDashboard } from './pages/AdminDashboard'
 import { UnauthorizedPage } from './pages/UnauthorizedPage'
+import { AdminSetup } from './pages/AdminSetup'
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
             {/* Route publique */}
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
+            <Route path="/admin-setup" element={<AdminSetup />} />
             
             {/* Routes protégées utilisateur */}
             <Route 
