@@ -88,8 +88,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
     })
     if (error) {
-      console.error('Sign in error:', error)
-      throw error
+      const errorMessage = error instanceof Error ? error.message : 'Authentication failed'
+      console.error('Sign in error:', errorMessage)
+      throw new Error(errorMessage)
     }
   }
 
