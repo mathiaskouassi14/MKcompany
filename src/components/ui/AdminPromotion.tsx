@@ -6,7 +6,7 @@ import { Shield, AlertTriangle } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 export function AdminPromotion() {
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState('monpaypal68@gmail.com')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
