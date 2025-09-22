@@ -195,6 +195,7 @@ export function AdminClientsPage() {
               </div>
             </div>
           </motion.div>
+        </div>
 
         {/* Filtres et recherche */}
         <motion.div
