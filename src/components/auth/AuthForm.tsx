@@ -23,6 +23,9 @@ export function AuthForm({ mode, onSuccess }: AuthFormProps) {
         ? 'Email ou mot de passe incorrect. Vérifiez vos identifiants ou créez un compte.'
         : 'Erreur lors de la création du compte. Vérifiez vos informations.'
     }
+    if (error.message?.includes('Email not confirmed')) {
+      return 'Votre email n\'a pas encore été confirmé. Vérifiez votre boîte mail et cliquez sur le lien de confirmation.'
+    }
     if (error.message?.includes('User already registered')) {
       return 'Un compte existe déjà avec cette adresse email. Essayez de vous connecter.'
     }
