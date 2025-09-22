@@ -1,45 +1,16 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { DashboardLayout } from '../components/dashboard/DashboardLayout'
 import { motion } from 'framer-motion'
-import { Search, Filter, Users, Eye, Mail, Phone } from 'lucide-react'
+import { Search, Filter, Users, Eye, Mail, Phone, CheckCircle, Clock, AlertTriangle, Edit, MessageSquare } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
-import { supabase } from '../lib/supabase'
-
-interface Client {
-  id: string
-  email: string
-  full_name: string | null
-  role: string
-  created_at: string
-  updated_at: string
-}
+import { useAdminData } from '../hooks/useAdminData'
 
 export function AdminClientsPage() {
-  const [clients, setClients] = useState<Client[]>([])
-  const [loading, setLoading] = useState(true)
+  const { clients, loading, error, actions } = useAdminData()
   const [searchTerm, setSearchTerm] = useState('')
   const [filterRole, setFilterRole] = useState('all')
-
-  useEffect(() => {
-    fetchClients()
-  }, [])
-
-  const fetchClients = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-      setClients(data || [])
-    } catch (error) {
-      console.error('Error fetching clients:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const [selectedClient, setSelectedClient] = useState<string | null>(null)
 
   const filteredClients = clients.filter(client => {
     const matchesSearch = client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -47,6 +18,19 @@ export function AdminClientsPage() {
     const matchesRole = filterRole === 'all' || client.role === filterRole
     return matchesSearch && matchesRole
   })
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'active':
+        return <CheckCircle className="w-4 h-4 text-emerald-400" />
+      case 'pending':
+        return <Clock className="w-4 h-4 text-yellow-400" />
+      case 'suspended':
+        return <AlertTriangle className="w-4 h-4 text-red-400" />
+      default:
+        return <Users className="w-4 h-4 text-slate-400" />
+    }
+  }
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -58,6 +42,31 @@ export function AdminClientsPage() {
         return 'text-blue-400 bg-blue-500/10 border-blue-500/20'
       default:
         return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+    }
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+      case 'pending':
+        return 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20'
+      case 'suspended':
+        return 'text-red-400 bg-red-500/10 border-red-500/20'
+      default:
+        return 'text-slate-400 bg-slate-500/10 border-slate-500/20'
+    }
+  }
+
+  const handleStatusChange = async (clientId: string, newStatus: string) => {
+    await actions.updateUserStatus(clientId, newStatus)
+  }
+
+  const handleSendNotification = async (clientId: string) => {
+    const title = prompt('Titre de la notification:')
+    const message = prompt('Message:')
+    if (title && message) {
+      await actions.sendNotification(clientId, title, message, 'info')
     }
   }
 
@@ -79,8 +88,13 @@ export function AdminClientsPage() {
             Gestion des Clients
           </h1>
           <p className="text-slate-400">
-            Gérez tous vos clients et leurs informations.
+            Gérez tous vos clients et leurs informations en temps réel.
           </p>
+          {error && (
+            <div className="mt-4 p-4 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20">
+              Erreur: {error}
+            </div>
+          )}
         </div>
 
         {/* Statistiques rapides */}
@@ -227,24 +241,57 @@ export function AdminClientsPage() {
                       </div>
                       <span>•</span>
                       <span>Inscrit le {new Date(client.created_at).toLocaleDateString('fr-FR')}</span>
+                      {client.llc_applications && client.llc_applications.length > 0 && (
+                        <>
+                          <span>•</span>
+                          <span>{client.llc_applications.length} LLC</span>
+                        </>
+                      )}
                     </div>
+                    {client.llc_applications && client.llc_applications.length > 0 && (
+                      <div className="mt-2">
+                        <span className="text-xs text-slate-500">
+                          Dernière LLC: {client.llc_applications[0].company_name} ({client.llc_applications[0].status})
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2">
+                    {getStatusIcon(client.status)}
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(client.status)}`}>
+                      {client.status}
+                    </span>
+                  </div>
+                  
                   <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getRoleColor(client.role)}`}>
                     {client.role}
                   </span>
                   
                   <div className="flex space-x-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleSendNotification(client.id)}
+                    >
+                      <MessageSquare className="w-4 h-4 mr-2" />
+                      Notifier
+                    </Button>
                     <Button variant="ghost" size="sm">
                       <Eye className="w-4 h-4 mr-2" />
                       Voir
                     </Button>
-                    <Button variant="ghost" size="sm">
-                      <Mail className="w-4 h-4 mr-2" />
-                      Contacter
-                    </Button>
+                    <select
+                      value={client.status}
+                      onChange={(e) => handleStatusChange(client.id, e.target.value)}
+                      className="px-2 py-1 rounded bg-slate-800 border border-slate-700 text-slate-100 text-xs"
+                    >
+                      <option value="active">Actif</option>
+                      <option value="pending">En attente</option>
+                      <option value="suspended">Suspendu</option>
+                    </select>
                   </div>
                 </div>
               </div>

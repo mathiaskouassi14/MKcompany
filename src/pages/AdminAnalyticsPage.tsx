@@ -1,46 +1,61 @@
 import { DashboardLayout } from '../components/dashboard/DashboardLayout'
 import { motion } from 'framer-motion'
-import { TrendingUp, Users, DollarSign, FileText, Calendar, BarChart3 } from 'lucide-react'
+import { TrendingUp, Users, DollarSign, FileText, Calendar, BarChart3, RefreshCw } from 'lucide-react'
+import { useAdminData } from '../hooks/useAdminData'
+import { Button } from '../components/ui/Button'
 
 export function AdminAnalyticsPage() {
-  const stats = [
+  const { stats, clients, documents, payments, loading, error, actions } = useAdminData()
+
+  const analyticsStats = [
     {
       name: 'Revenus ce mois',
-      value: '$24,500',
+      value: `$${stats?.total_revenue?.toLocaleString() || '0'}`,
       change: '+12%',
       changeType: 'positive',
       icon: DollarSign
     },
     {
       name: 'Nouveaux clients',
-      value: '18',
+      value: stats?.new_users_today?.toString() || '0',
       change: '+8%',
       changeType: 'positive',
       icon: Users
     },
     {
       name: 'LLC créées',
-      value: '15',
+      value: stats?.completed_applications?.toString() || '0',
       change: '+5%',
       changeType: 'positive',
       icon: FileText
     },
     {
-      name: 'Taux de conversion',
-      value: '3.2%',
-      change: '-2%',
-      changeType: 'negative',
+      name: 'Documents en attente',
+      value: stats?.pending_documents?.toString() || '0',
+      change: '+2%',
+      changeType: 'warning',
       icon: TrendingUp
     }
   ]
 
+  // Activité récente basée sur les vraies données
   const recentActivity = [
-    { action: 'Nouvelle LLC créée', client: 'Ahmed Benali', time: 'il y a 2h' },
-    { action: 'Paiement reçu', client: 'Sarah Martin', time: 'il y a 4h' },
-    { action: 'Document validé', client: 'Marc Dubois', time: 'il y a 6h' },
-    { action: 'Nouveau client inscrit', client: 'Julie Moreau', time: 'il y a 8h' },
-    { action: 'LLC finalisée', client: 'Pierre Durand', time: 'il y a 1j' }
-  ]
+    ...clients.slice(0, 2).map(client => ({
+      action: 'Nouveau client inscrit',
+      client: client.full_name || client.email,
+      time: new Date(client.created_at).toLocaleDateString('fr-FR')
+    })),
+    ...documents.slice(0, 2).map(doc => ({
+      action: `Document ${doc.status === 'approved' ? 'approuvé' : 'soumis'}`,
+      client: doc.user?.full_name || doc.user?.email || 'Client',
+      time: new Date(doc.uploaded_at).toLocaleDateString('fr-FR')
+    })),
+    ...payments.slice(0, 1).map(payment => ({
+      action: `Paiement ${payment.status === 'completed' ? 'reçu' : 'en attente'}`,
+      client: payment.user?.full_name || payment.user?.email || 'Client',
+      time: new Date(payment.created_at).toLocaleDateString('fr-FR')
+    }))
+  ].slice(0, 5)
 
   return (
     <DashboardLayout>
@@ -52,11 +67,28 @@ export function AdminAnalyticsPage() {
           <p className="text-slate-400">
             Analysez les performances de votre business et suivez les tendances.
           </p>
+          <div className="mt-4 flex items-center space-x-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={actions.refreshData}
+              disabled={loading}
+              className="flex items-center"
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              Actualiser
+            </Button>
+            {error && (
+              <span className="text-red-400 text-sm">
+                Erreur: {error}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Statistiques principales */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {stats.map((stat, index) => (
+          {analyticsStats.map((stat, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 20 }}
@@ -73,7 +105,8 @@ export function AdminAnalyticsPage() {
                     {stat.value}
                   </p>
                   <p className={`text-sm flex items-center ${
-                    stat.changeType === 'positive' ? 'text-emerald-400' : 'text-red-400'
+                    stat.changeType === 'positive' ? 'text-emerald-400' : 
+                    stat.changeType === 'warning' ? 'text-yellow-400' : 'text-red-400'
                   }`}>
                     <TrendingUp className={`w-4 h-4 mr-1 ${
                       stat.changeType === 'negative' ? 'rotate-180' : ''
@@ -100,21 +133,38 @@ export function AdminAnalyticsPage() {
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold font-poppins text-slate-100 flex items-center">
                 <BarChart3 className="w-6 h-6 text-emerald-400 mr-3" />
-                Revenus mensuels
+                Statistiques en temps réel
               </h3>
-              <select className="px-3 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-100 text-sm">
-                <option>6 derniers mois</option>
-                <option>12 derniers mois</option>
-                <option>Cette année</option>
-              </select>
             </div>
             
-            {/* Placeholder pour graphique */}
-            <div className="h-64 bg-slate-800/50 rounded-lg flex items-center justify-center border border-slate-700">
-              <div className="text-center">
-                <BarChart3 className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-                <p className="text-slate-500">Graphique des revenus</p>
-                <p className="text-sm text-slate-600">Intégration en cours...</p>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-4 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                  <div className="text-2xl font-bold font-poppins gradient-text mb-1">
+                    {stats?.total_users || 0}
+                  </div>
+                  <p className="text-slate-400 text-sm">Clients totaux</p>
+                </div>
+                <div className="text-center p-4 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                  <div className="text-2xl font-bold font-poppins gradient-text mb-1">
+                    {stats?.total_applications || 0}
+                  </div>
+                  <p className="text-slate-400 text-sm">LLC totales</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-4 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                  <div className="text-2xl font-bold font-poppins gradient-text mb-1">
+                    {stats?.pending_applications || 0}
+                  </div>
+                  <p className="text-slate-400 text-sm">En cours</p>
+                </div>
+                <div className="text-center p-4 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                  <div className="text-2xl font-bold font-poppins gradient-text mb-1">
+                    {stats?.completed_applications || 0}
+                  </div>
+                  <p className="text-slate-400 text-sm">Terminées</p>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -134,7 +184,7 @@ export function AdminAnalyticsPage() {
             </div>
             
             <div className="space-y-4">
-              {recentActivity.map((activity, index) => (
+              {recentActivity.length > 0 ? recentActivity.map((activity, index) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, y: 10 }}
@@ -154,7 +204,12 @@ export function AdminAnalyticsPage() {
                     {activity.time}
                   </span>
                 </motion.div>
-              ))}
+              )) : (
+                <div className="text-center py-8">
+                  <Calendar className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+                  <p className="text-slate-500">Aucune activité récente</p>
+                </div>
+              )}
             </div>
           </motion.div>
         </div>
@@ -176,48 +231,28 @@ export function AdminAnalyticsPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center p-6 rounded-lg bg-slate-800/50 border border-slate-700/50">
               <div className="text-3xl font-bold font-poppins gradient-text mb-2">
-                $1,847
+                ${stats?.total_revenue ? Math.round(stats.total_revenue / (stats.total_users || 1)) : 0}
               </div>
               <p className="text-slate-400 mb-1">Revenu moyen par client</p>
-              <p className="text-sm text-emerald-400">+15% vs mois dernier</p>
+              <p className="text-sm text-emerald-400">Temps réel</p>
             </div>
             
             <div className="text-center p-6 rounded-lg bg-slate-800/50 border border-slate-700/50">
               <div className="text-3xl font-bold font-poppins gradient-text mb-2">
-                4.2j
+                {stats?.pending_applications && stats?.total_applications ? 
+                  Math.round((stats.pending_applications / stats.total_applications) * 100) : 0}%
               </div>
-              <p className="text-slate-400 mb-1">Temps moyen de création</p>
-              <p className="text-sm text-emerald-400">-8% vs mois dernier</p>
+              <p className="text-slate-400 mb-1">Taux de progression</p>
+              <p className="text-sm text-emerald-400">Temps réel</p>
             </div>
             
             <div className="text-center p-6 rounded-lg bg-slate-800/50 border border-slate-700/50">
               <div className="text-3xl font-bold font-poppins gradient-text mb-2">
-                98.5%
+                {stats?.completed_applications && stats?.total_applications ? 
+                  Math.round((stats.completed_applications / stats.total_applications) * 100) : 0}%
               </div>
-              <p className="text-slate-400 mb-1">Taux de satisfaction</p>
-              <p className="text-sm text-emerald-400">+2% vs mois dernier</p>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Note de développement */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.7 }}
-          className="card-glass border border-blue-500/20 bg-blue-500/5"
-        >
-          <div className="flex items-start space-x-3">
-            <BarChart3 className="h-6 w-6 text-blue-400 mt-1" />
-            <div>
-              <h3 className="text-lg font-semibold font-poppins text-blue-400 mb-2">
-                Analytics avancées en développement
-              </h3>
-              <p className="text-slate-300 text-sm">
-                Cette page sera bientôt enrichie avec des graphiques interactifs, 
-                des rapports détaillés et des analyses prédictives pour vous aider 
-                à optimiser votre business.
-              </p>
+              <p className="text-slate-400 mb-1">Taux de réussite</p>
+              <p className="text-sm text-emerald-400">Temps réel</p>
             </div>
           </div>
         </motion.div>

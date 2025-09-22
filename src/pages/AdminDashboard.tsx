@@ -1,68 +1,16 @@
-import { useState, useEffect } from 'react'
-import { useAuth } from '../hooks/useAuth'
-import { supabase } from '../lib/supabase'
+import { useAdminData } from '../hooks/useAdminData'
 import { Navbar } from '../components/layout/Navbar'
 import { Button } from '../components/ui/Button'
-import { Users, Activity, Settings, AlertTriangle, TrendingUp, Database, Shield, Zap } from 'lucide-react'
+import { Users, Activity, Settings, AlertTriangle, TrendingUp, Database, Shield, Zap, RefreshCw } from 'lucide-react'
 import { motion } from 'framer-motion'
 
-interface AdminStats {
-  totalUsers: number
-  activeUsers: number
-  newUsersToday: number
-  totalData: number
-}
-
 export function AdminDashboard() {
-  const { user } = useAuth()
-  const [stats, setStats] = useState<AdminStats>({
-    totalUsers: 0,
-    activeUsers: 0,
-    newUsersToday: 0,
-    totalData: 0
-  })
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetchAdminStats()
-  }, [])
-
-  const fetchAdminStats = async () => {
-    try {
-      // Récupérer le nombre total d'utilisateurs
-      const { count: totalUsers } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-
-      // Récupérer les nouveaux utilisateurs d'aujourd'hui
-      const today = new Date().toISOString().split('T')[0]
-      const { count: newUsersToday } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', today)
-
-      // Récupérer le nombre total de données
-      const { count: totalData } = await supabase
-        .from('user_data')
-        .select('*', { count: 'exact', head: true })
-
-      setStats({
-        totalUsers: totalUsers || 0,
-        activeUsers: Math.floor((totalUsers || 0) * 0.7), // Simulation
-        newUsersToday: newUsersToday || 0,
-        totalData: totalData || 0
-      })
-    } catch (error) {
-      console.error('Error fetching admin stats:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const { stats, loading, error, actions } = useAdminData()
 
   const adminStats = [
     { 
       name: 'Utilisateurs totaux', 
-      value: stats.totalUsers.toString(), 
+      value: stats?.total_users?.toString() || '0', 
       icon: Users, 
       color: 'text-emerald-400',
       bg: 'bg-emerald-500/10',
@@ -70,7 +18,7 @@ export function AdminDashboard() {
     },
     { 
       name: 'Utilisateurs actifs', 
-      value: stats.activeUsers.toString(), 
+      value: stats?.active_users?.toString() || '0', 
       icon: Activity, 
       color: 'text-blue-400',
       bg: 'bg-blue-500/10',
@@ -78,15 +26,15 @@ export function AdminDashboard() {
     },
     { 
       name: 'Nouveaux aujourd\'hui', 
-      value: stats.newUsersToday.toString(), 
+      value: stats?.new_users_today?.toString() || '0', 
       icon: TrendingUp, 
       color: 'text-purple-400',
       bg: 'bg-purple-500/10',
       border: 'border-purple-500/20'
     },
     { 
-      name: 'Données totales', 
-      value: stats.totalData.toString(), 
+      name: 'LLC en cours', 
+      value: stats?.pending_applications?.toString() || '0', 
       icon: Database, 
       color: 'text-yellow-400',
       bg: 'bg-yellow-500/10',
@@ -141,8 +89,25 @@ export function AdminDashboard() {
               Administration <span className="gradient-text">🛡️</span>
             </h1>
             <p className="text-lg text-slate-400">
-              Tableau de bord administrateur - Bienvenue {user?.full_name || user?.email}
+              Tableau de bord administrateur - Gestion temps réel
             </p>
+            <div className="mt-4 flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={actions.refreshData}
+                disabled={loading}
+                className="flex items-center"
+              >
+                <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                Actualiser
+              </Button>
+              {error && (
+                <span className="text-red-400 text-sm">
+                  Erreur: {error}
+                </span>
+              )}
+            </div>
           </motion.div>
 
           {/* Alerte de sécurité */}
@@ -224,7 +189,7 @@ export function AdminDashboard() {
                     className="w-full text-left p-4 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 transition-all duration-200 border border-slate-700/50 hover:border-emerald-500/30"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => alert('Fonctionnalité en développement')}
+                    onClick={() => window.location.href = '/admin/clients'}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: 0.6 + index * 0.1 }}
@@ -264,7 +229,7 @@ export function AdminDashboard() {
                     className="w-full text-left p-4 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 transition-all duration-200 border border-slate-700/50 hover:border-emerald-500/30"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={action.action || (() => alert('Fonctionnalité en développement'))}
+                    onClick={action.action || (() => window.location.href = '/admin/analytics')}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: 0.7 + index * 0.1 }}
@@ -297,9 +262,9 @@ export function AdminDashboard() {
             </div>
             <div className="space-y-4">
               {[
-                { text: 'Nouvel utilisateur inscrit', time: 'il y a 1 heure', color: 'bg-emerald-400' },
-                { text: 'Mise à jour système effectuée', time: 'il y a 2 heures', color: 'bg-blue-400' },
-                { text: 'Sauvegarde automatique', time: 'il y a 6 heures', color: 'bg-purple-400' }
+                { text: `${stats?.new_users_today || 0} nouveaux utilisateurs aujourd'hui`, time: 'temps réel', color: 'bg-emerald-400' },
+                { text: `${stats?.pending_documents || 0} documents en attente`, time: 'temps réel', color: 'bg-yellow-400' },
+                { text: `$${stats?.total_revenue || 0} de revenus totaux`, time: 'temps réel', color: 'bg-blue-400' }
               ].map((activity, index) => (
                 <motion.div 
                   key={index}
