@@ -10,9 +10,10 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.error('Missing Supabase environment variables')
   console.error('VITE_SUPABASE_URL:', supabaseUrl)
   console.error('VITE_SUPABASE_ANON_KEY:', supabaseAnonKey ? 'Present' : 'Missing')
+  throw new Error('Missing Supabase environment variables. Please check your .env file.')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient(supabaseUrl!, supabaseAnonKey!)
 
 export type Database = {
   public: {
