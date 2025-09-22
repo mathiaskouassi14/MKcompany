@@ -3,7 +3,8 @@ import { useAuth } from '../hooks/useAuth'
 import { Navbar } from '../components/layout/Navbar'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
-import { User, Mail, Calendar } from 'lucide-react'
+import { User, Mail, Calendar, Shield, CheckCircle } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 export function UserProfile() {
   const { user, updateProfile } = useAuth()
@@ -27,46 +28,81 @@ export function UserProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-900 relative overflow-hidden">
+      {/* Arrière-plan animé */}
+      <div className="absolute inset-0 liquid-bg opacity-10"></div>
+      <div className="absolute inset-0 animate-particles"></div>
+      
       <Navbar />
       
-      <div className="max-w-3xl mx-auto py-6 sm:px-6 lg:px-8">
+      <div className="relative z-10 max-w-4xl mx-auto py-8 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Mon Profil</h1>
-            <p className="mt-2 text-gray-600">
+          <motion.div 
+            className="mb-8"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <h1 className="text-4xl font-bold font-poppins gradient-text mb-2">
+              Mon Profil
+            </h1>
+            <p className="text-lg text-slate-400">
               Gérez vos informations personnelles
             </p>
-          </div>
+          </motion.div>
 
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">
+          <motion.div 
+            className="card-glass"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <div className="border-b border-slate-700 pb-6 mb-6">
+              <h2 className="text-xl font-semibold font-poppins text-slate-100 flex items-center">
+                <User className="w-6 h-6 text-emerald-400 mr-3" />
                 Informations personnelles
               </h2>
             </div>
             
-            <div className="p-6">
-              <div className="flex items-center mb-6">
-                <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center">
-                  <User className="w-8 h-8 text-gray-500" />
+            <div className="mb-8">
+              <motion.div 
+                className="flex items-center space-x-6"
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+              >
+                <div className="relative">
+                  <div className="w-24 h-24 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center shadow-lg">
+                    <User className="w-10 h-10 text-white" />
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center border-2 border-slate-900">
+                    <CheckCircle className="w-4 h-4 text-white" />
+                  </div>
                 </div>
-                <div className="ml-6">
-                  <h3 className="text-lg font-medium text-gray-900">
+                <div className="space-y-2">
+                  <h3 className="text-2xl font-bold font-poppins text-slate-100">
                     {user?.full_name || 'Nom non défini'}
                   </h3>
-                  <p className="text-gray-600 flex items-center">
-                    <Mail className="w-4 h-4 mr-1" />
+                  <p className="text-slate-400 flex items-center">
+                    <Mail className="w-4 h-4 mr-2" />
                     {user?.email}
                   </p>
-                  <p className="text-gray-500 text-sm flex items-center mt-1">
-                    <Calendar className="w-4 h-4 mr-1" />
+                  <p className="text-slate-500 text-sm flex items-center">
+                    <Calendar className="w-4 h-4 mr-2" />
                     Membre depuis {new Date(user?.created_at || '').toLocaleDateString()}
                   </p>
                 </div>
-              </div>
+              </motion.div>
+            </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
+            <motion.form 
+              onSubmit={handleSubmit} 
+              className="space-y-6"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Input
                   label="Nom complet"
                   value={fullName}
@@ -78,48 +114,55 @@ export function UserProfile() {
                   label="Email"
                   value={user?.email || ''}
                   disabled
-                  className="bg-gray-50"
+                  className="opacity-60 cursor-not-allowed"
                 />
+              </div>
 
-                <div className="bg-blue-50 p-4 rounded-md">
-                  <div className="flex">
-                    <div className="flex-shrink-0">
-                      <User className="h-5 w-5 text-blue-400" />
-                    </div>
-                    <div className="ml-3">
-                      <h3 className="text-sm font-medium text-blue-800">
-                        Rôle : {user?.role}
-                      </h3>
-                      <div className="mt-2 text-sm text-blue-700">
-                        <p>
-                          Votre niveau d'accès détermine les fonctionnalités disponibles.
-                        </p>
-                      </div>
-                    </div>
+              <motion.div 
+                className="card-glass border border-emerald-500/20 bg-emerald-500/5"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, delay: 0.5 }}
+              >
+                <div className="flex items-start space-x-3">
+                  <Shield className="h-6 w-6 text-emerald-400 mt-1" />
+                  <div>
+                    <h3 className="text-lg font-semibold font-poppins text-emerald-400 mb-2">
+                      Rôle : {user?.role}
+                    </h3>
+                    <p className="text-slate-300 text-sm">
+                      Votre niveau d'accès détermine les fonctionnalités disponibles dans l'application.
+                    </p>
                   </div>
                 </div>
+              </motion.div>
 
-                {message && (
-                  <div className={`p-4 rounded-md ${
+              {message && (
+                <motion.div 
+                  className={`p-4 rounded-lg border ${
                     message.includes('succès') 
-                      ? 'bg-green-50 text-green-800' 
-                      : 'bg-red-50 text-red-800'
-                  }`}>
-                    {message}
-                  </div>
-                )}
+                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                      : 'bg-red-500/10 text-red-400 border-red-500/20'
+                  }`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {message}
+                </motion.div>
+              )}
 
-                <div className="flex justify-end">
-                  <Button
-                    type="submit"
-                    loading={loading}
-                  >
-                    Sauvegarder les modifications
-                  </Button>
-                </div>
-              </form>
-            </div>
-          </div>
+              <div className="flex justify-end pt-6 border-t border-slate-700">
+                <Button
+                  type="submit"
+                  loading={loading}
+                  glow={true}
+                >
+                  Sauvegarder les modifications
+                </Button>
+              </div>
+            </motion.form>
+          </motion.div>
         </div>
       </div>
     </div>

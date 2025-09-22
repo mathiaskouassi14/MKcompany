@@ -1,4 +1,5 @@
 import { InputHTMLAttributes, forwardRef } from 'react'
+import { motion } from 'framer-motion'
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string
@@ -8,26 +9,38 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ label, error, className = '', ...props }, ref) => {
     return (
-      <div className="space-y-1">
+      <motion.div 
+        className="space-y-2"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
         {label && (
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-slate-300">
             {label}
           </label>
         )}
         <input
           ref={ref}
           className={`
-            block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm
-            placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500
-            ${error ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : ''}
+            block w-full px-4 py-3 rounded-lg shadow-sm transition-all duration-200
+            input-glass
+            ${error ? 'border-red-500 focus:ring-red-500/20 focus:border-red-500' : ''}
             ${className}
           `}
           {...props}
         />
         {error && (
-          <p className="text-sm text-red-600">{error}</p>
+          <motion.p 
+            className="text-sm text-red-400"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+          >
+            {error}
+          </motion.p>
         )}
-      </div>
+      </motion.div>
     )
   }
 )
