@@ -43,6 +43,8 @@ export function AuthForm({ mode, onSuccess }: AuthFormProps) {
     try {
       if (mode === 'signin') {
         await signIn(email, password)
+        // Redirection automatique après connexion réussie
+        window.location.href = '/dashboard'
       } else {
         await signUp(email, password)
         setSuccess('Compte créé avec succès ! Vous pouvez maintenant vous connecter.')

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { AuthForm } from '../components/auth/AuthForm'
 import { Button } from '../components/ui/Button'
@@ -7,6 +7,7 @@ import { Button } from '../components/ui/Button'
 export function AuthPage() {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin')
   const { user, loading } = useAuth()
+  const navigate = useNavigate()
 
   if (loading) {
     return (
@@ -20,6 +21,10 @@ export function AuthPage() {
     return <Navigate to="/dashboard" replace />
   }
 
+  const handleAuthSuccess = () => {
+    navigate('/dashboard')
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -27,7 +32,7 @@ export function AuthPage() {
           Bienvenue
         </h1>
         
-        <AuthForm mode={mode} />
+        <AuthForm mode={mode} onSuccess={handleAuthSuccess} />
         
         <div className="mt-6 text-center">
           <Button

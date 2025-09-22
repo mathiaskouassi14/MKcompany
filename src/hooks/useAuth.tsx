@@ -41,10 +41,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('id', userId)
         .single()
 
-      if (error) throw error
-      setUser(data)
+      if (error) {
+        // Si le profil n'existe pas, on le crée
+        if (error.code === 'PGRST116') {
+          const { data: authUser } = await supabase.auth.getUser()
+          if (authUser.user) {
+            const newProfile = {
+              id: authUser.user.id,
+              email: authUser.user.email,
+              full_name: authUser.user.user_metadata?.full_name || null,
+              role: 'user' as const
+            }
+            
+            const { data: createdProfile, error: createError } = await supabase
+              .from('profiles')
+              .insert(newProfile)
+              .select()
+              .single()
+            
+            if (createError) throw createError
+            setUser(createdProfile)
+          }
+        } else {
+          throw error
+        }
+      } else {
+        setUser(data)
+      }
     } catch (error) {
       console.error('Error fetching user profile:', error)
+      // En cas d'erreur, on crée un profil minimal avec les données auth
+      const { data: authUser } = await supabase.auth.getUser()
+      if (authUser.user) {
+        const minimalProfile = {
+          id: authUser.user.id,
+          email: authUser.user.email || '',
+          full_name: authUser.user.user_metadata?.full_name || null,
+          avatar_url: null,
+          role: 'user' as const,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+        setUser(minimalProfile)
+      }
     } finally {
       setLoading(false)
     }

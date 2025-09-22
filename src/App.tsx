@@ -46,7 +46,7 @@ function App() {
             />
             
             {/* Redirection par défaut */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<Navigate to="/auth" replace />} />
           </Routes>
         </div>
       </Router>
