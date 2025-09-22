@@ -115,6 +115,7 @@ export function AdminClientsPage() {
         <RegistrationManagement />
 
         {/* Statistiques rapides */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -194,7 +195,6 @@ export function AdminClientsPage() {
               </div>
             </div>
           </motion.div>
-        </div>
 
         {/* Filtres et recherche */}
         <motion.div
