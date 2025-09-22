@@ -11,10 +11,15 @@ export function AuthPage() {
   const { user, loading } = useAuth()
   const navigate = useNavigate()
 
+  console.log('AuthPage - User:', user, 'Loading:', loading)
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="loading-spinner h-16 w-16"></div>
+        <div className="flex flex-col items-center">
+          <div className="loading-spinner h-16 w-16 mb-4"></div>
+          <p className="text-slate-400">Chargement...</p>
+        </div>
       </div>
     )
   }

@@ -35,6 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserProfile = async (userId: string) => {
     try {
+      console.log('Fetching profile for user:', userId)
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -44,6 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) {
         // Si le profil n'existe pas, on le crée
         if (error.code === 'PGRST116') {
+          console.log('Profile not found, creating new profile')
           const { data: authUser } = await supabase.auth.getUser()
           if (authUser.user) {
             const newProfile = {
@@ -63,46 +65,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(createdProfile)
           }
         } else {
+          console.error('Profile fetch error:', error)
           throw error
         }
       } else {
+        console.log('Profile found:', data)
         setUser(data)
       }
     } catch (error) {
       console.error('Error fetching user profile:', error)
-      // En cas d'erreur, on crée un profil minimal avec les données auth
-      const { data: authUser } = await supabase.auth.getUser()
-      if (authUser.user) {
-        const minimalProfile = {
-          id: authUser.user.id,
-          email: authUser.user.email || '',
-          full_name: authUser.user.user_metadata?.full_name || null,
-          avatar_url: null,
-          role: 'user' as const,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-        setUser(minimalProfile)
-      }
+      // En cas d'erreur, on définit l'utilisateur comme null
+      setUser(null)
     } finally {
       setLoading(false)
     }
   }
 
   const signIn = async (email: string, password: string) => {
+    console.log('Attempting sign in for:', email)
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
-    if (error) throw error
+    if (error) {
+      console.error('Sign in error:', error)
+      throw error
+    }
   }
 
   const signUp = async (email: string, password: string) => {
+    console.log('Attempting sign up for:', email)
     const { error } = await supabase.auth.signUp({
       email,
       password,
     })
-    if (error) throw error
+    if (error) {
+      console.error('Sign up error:', error)
+      throw error
+    }
   }
 
   const signOut = async () => {
