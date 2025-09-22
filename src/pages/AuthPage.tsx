@@ -16,9 +16,10 @@ export function AuthPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center space-y-4">
           <div className="loading-spinner h-16 w-16 mb-4"></div>
-          <p className="text-slate-400">Chargement...</p>
+          <p className="text-slate-400">Connexion à Supabase...</p>
+          <p className="text-slate-500 text-sm">Si cela prend trop de temps, vérifiez votre connexion</p>
         </div>
       </div>
     )

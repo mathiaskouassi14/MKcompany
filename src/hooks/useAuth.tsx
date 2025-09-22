@@ -10,7 +10,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error('Session error:', error)
+        setLoading(false)
+        return
+      }
+      
       if (session?.user) {
         fetchUserProfile(session.user.id)
       } else {
@@ -21,6 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state change:', event, session)
         if (session?.user) {
           await fetchUserProfile(session.user.id)
         } else {
@@ -34,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const fetchUserProfile = async (userId: string) => {
+    setLoading(true)
     try {
       console.log('Fetching profile for user:', userId)
       const { data, error } = await supabase
@@ -43,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .single()
 
       if (error) {
+        console.error('Profile fetch error details:', error)
         // Si le profil n'existe pas, on le crée
         if (error.code === 'PGRST116') {
           console.log('Profile not found, creating new profile')
@@ -66,7 +75,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         } else {
           console.error('Profile fetch error:', error)
-          throw error
+          // En cas d'erreur de connexion, on continue sans profil
+          setUser(null)
         }
       } else {
         console.log('Profile found:', data)
@@ -74,7 +84,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error('Error fetching user profile:', error)
-      // En cas d'erreur, on définit l'utilisateur comme null
       setUser(null)
     } finally {
       setLoading(false)
