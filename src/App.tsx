@@ -1,12 +1,16 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './hooks/useAuth'
 import { ProtectedRoute } from './components/layout/ProtectedRoute'
+import { LandingPage } from './pages/LandingPage'
 import { AuthPage } from './pages/AuthPage'
-import { UserDashboard } from './pages/UserDashboard'
-import { UserProfile } from './pages/UserProfile'
+import { ClientDashboard } from './pages/ClientDashboard'
 import { AdminDashboard } from './pages/AdminDashboard'
+import { DocumentsPage } from './pages/DocumentsPage'
+import { PaymentsPage } from './pages/PaymentsPage'
+import { SettingsPage } from './pages/SettingsPage'
+import { AdminClientsPage } from './pages/AdminClientsPage'
+import { AdminAnalyticsPage } from './pages/AdminAnalyticsPage'
 import { UnauthorizedPage } from './pages/UnauthorizedPage'
-import { AdminSetup } from './pages/AdminSetup'
 
 function App() {
   return (
@@ -14,25 +18,41 @@ function App() {
       <Router>
         <div className="App">
           <Routes>
-            {/* Route publique */}
+            {/* Routes publiques */}
+            <Route path="/" element={<LandingPage />} />
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
-            <Route path="/admin-setup" element={<AdminSetup />} />
             
-            {/* Routes protégées utilisateur */}
+            {/* Routes protégées client */}
             <Route 
               path="/dashboard" 
               element={
                 <ProtectedRoute>
-                  <UserDashboard />
+                  <ClientDashboard />
                 </ProtectedRoute>
               } 
             />
             <Route 
-              path="/profile" 
+              path="/documents" 
               element={
                 <ProtectedRoute>
-                  <UserProfile />
+                  <DocumentsPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/payments" 
+              element={
+                <ProtectedRoute>
+                  <PaymentsPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/settings" 
+              element={
+                <ProtectedRoute>
+                  <SettingsPage />
                 </ProtectedRoute>
               } 
             />
@@ -46,9 +66,22 @@ function App() {
                 </ProtectedRoute>
               } 
             />
-            
-            {/* Redirection par défaut */}
-            <Route path="/" element={<Navigate to="/auth" replace />} />
+            <Route 
+              path="/admin/clients" 
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AdminClientsPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/analytics" 
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AdminAnalyticsPage />
+                </ProtectedRoute>
+              } 
+            />
           </Routes>
         </div>
       </Router>
