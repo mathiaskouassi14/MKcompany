@@ -1,61 +1,156 @@
 import { useState } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
-import { useAuth } from '../hooks/useAuth'
-import { AuthForm } from '../components/auth/AuthForm'
-import { Button } from '../components/ui/Button'
-import { ArrowRight } from 'lucide-react'
+import { supabase } from '../lib/supabase'
 
 export function AuthPage() {
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin')
-  const { user, loading } = useAuth()
-  const navigate = useNavigate()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState('')
+  const [isSignUp, setIsSignUp] = useState(false)
 
-  // Simple loading state
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-400">Chargement...</p>
-        </div>
-      </div>
-    )
-  }
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setMessage('')
 
-  // Redirect if already logged in
-  if (user) {
-    return <Navigate to="/dashboard" replace />
+    try {
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({ email, password })
+        if (error) throw error
+        setMessage('Compte créé ! Vérifiez votre email.')
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password })
+        if (error) throw error
+        window.location.href = '/dashboard'
+      }
+    } catch (error: any) {
+      setMessage(error.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">
-            {mode === 'signin' ? 'Connexion' : 'Inscription'}
-          </h1>
-          <p className="text-slate-400">
-            {mode === 'signin' 
-              ? 'Connectez-vous à votre compte' 
-              : 'Créez votre compte'
-            }
-          </p>
-        </div>
-        
-        <AuthForm mode={mode} onSuccess={() => navigate('/dashboard')} />
-        
-        <div className="mt-6 text-center">
-          <Button
-            variant="ghost"
-            onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
+    <div style={{ 
+      minHeight: '100vh', 
+      backgroundColor: '#0f172a', 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center',
+      padding: '20px'
+    }}>
+      <div style={{
+        backgroundColor: '#1e293b',
+        padding: '40px',
+        borderRadius: '12px',
+        width: '100%',
+        maxWidth: '400px',
+        border: '1px solid #334155'
+      }}>
+        <h1 style={{ 
+          color: 'white', 
+          textAlign: 'center', 
+          marginBottom: '30px',
+          fontSize: '24px',
+          fontWeight: 'bold'
+        }}>
+          {isSignUp ? 'Inscription' : 'Connexion'}
+        </h1>
+
+        <form onSubmit={handleAuth}>
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ color: '#cbd5e1', display: 'block', marginBottom: '8px' }}>
+              Email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              style={{
+                width: '100%',
+                padding: '12px',
+                backgroundColor: '#334155',
+                border: '1px solid #475569',
+                borderRadius: '8px',
+                color: 'white',
+                fontSize: '16px'
+              }}
+              placeholder="votre@email.com"
+            />
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ color: '#cbd5e1', display: 'block', marginBottom: '8px' }}>
+              Mot de passe
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+              style={{
+                width: '100%',
+                padding: '12px',
+                backgroundColor: '#334155',
+                border: '1px solid #475569',
+                borderRadius: '8px',
+                color: 'white',
+                fontSize: '16px'
+              }}
+              placeholder="••••••••"
+            />
+          </div>
+
+          {message && (
+            <div style={{
+              padding: '12px',
+              marginBottom: '20px',
+              backgroundColor: message.includes('créé') ? '#065f46' : '#7f1d1d',
+              color: message.includes('créé') ? '#34d399' : '#fca5a5',
+              borderRadius: '8px',
+              fontSize: '14px'
+            }}>
+              {message}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: '12px',
+              backgroundColor: loading ? '#6b7280' : '#10b981',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '16px',
+              fontWeight: '600',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              marginBottom: '20px'
+            }}
           >
-            {mode === 'signin' 
-              ? "Pas de compte ? S'inscrire" 
-              : 'Déjà un compte ? Se connecter'
-            }
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
-        </div>
+            {loading ? 'Chargement...' : (isSignUp ? "S'inscrire" : 'Se connecter')}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsSignUp(!isSignUp)}
+            style={{
+              width: '100%',
+              padding: '8px',
+              backgroundColor: 'transparent',
+              color: '#10b981',
+              border: 'none',
+              fontSize: '14px',
+              cursor: 'pointer'
+            }}
+          >
+            {isSignUp ? 'Déjà un compte ? Se connecter' : "Pas de compte ? S'inscrire"}
+          </button>
+        </form>
       </div>
     </div>
   )
