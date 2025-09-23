@@ -11,15 +11,12 @@ export function AuthPage() {
   const { user, loading } = useAuth()
   const navigate = useNavigate()
 
-  console.log('AuthPage - User:', user, 'Loading:', loading)
-
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="flex flex-col items-center space-y-4">
-          <div className="loading-spinner h-16 w-16 mb-4"></div>
-          <p className="text-slate-400">Connexion à Supabase...</p>
-          <p className="text-slate-500 text-sm">Si cela prend trop de temps, vérifiez votre connexion</p>
+          <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-slate-400">Chargement...</p>
         </div>
       </div>
     )
@@ -36,8 +33,7 @@ export function AuthPage() {
   return (
     <div className="min-h-screen bg-slate-900 relative overflow-hidden">
       {/* Arrière-plan animé */}
-      <div className="absolute inset-0 liquid-bg opacity-20"></div>
-      <div className="absolute inset-0 animate-particles"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"></div>
       
       <div className="relative z-10 min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -52,7 +48,7 @@ export function AuthPage() {
                 <Sparkles className="w-8 h-8 text-white" />
               </div>
             </div>
-            <h1 className="text-4xl font-bold font-poppins gradient-text shimmer-text mb-4">
+            <h1 className="text-4xl font-bold font-poppins text-white mb-4">
               Bienvenue
             </h1>
             <p className="text-lg text-slate-400">

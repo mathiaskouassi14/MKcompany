@@ -20,21 +20,22 @@ export function AuthForm({ mode, onSuccess }: AuthFormProps) {
   const { signIn, signUp } = useAuth()
 
   const getErrorMessage = (error: any) => {
-    if (error.message?.includes('Invalid login credentials')) {
-      return mode === 'signin' 
-        ? 'Email ou mot de passe incorrect. Vérifiez vos identifiants ou créez un compte.'
-        : 'Erreur lors de la création du compte. Vérifiez vos informations.'
+    const message = error?.message || error || 'Une erreur est survenue'
+    
+    if (message.includes('Invalid login credentials')) {
+      return 'Email ou mot de passe incorrect'
     }
-    if (error.message?.includes('Email not confirmed')) {
-      return 'Votre email n\'a pas encore été confirmé. Vérifiez votre boîte mail et cliquez sur le lien de confirmation.'
+    if (message.includes('Email not confirmed')) {
+      return 'Veuillez confirmer votre email'
     }
-    if (error.message?.includes('User already registered')) {
-      return 'Un compte existe déjà avec cette adresse email. Essayez de vous connecter.'
+    if (message.includes('User already registered')) {
+      return 'Un compte existe déjà avec cet email'
     }
-    if (error.message?.includes('Password should be at least')) {
-      return 'Le mot de passe doit contenir au moins 6 caractères.'
+    if (message.includes('Password should be at least')) {
+      return 'Le mot de passe doit contenir au moins 6 caractères'
     }
-    return error.message || 'Une erreur est survenue. Veuillez réessayer.'
+    
+    return message
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -60,72 +61,50 @@ export function AuthForm({ mode, onSuccess }: AuthFormProps) {
 
   return (
     <motion.div 
-      className="max-w-md mx-auto card-glass"
+      className="max-w-md mx-auto bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-8"
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
     >
       <div className="text-center mb-8">
-        <motion.h2 
-          className="text-3xl font-bold font-poppins gradient-text mb-2"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-        >
+        <h2 className="text-3xl font-bold font-poppins text-white mb-2">
           {mode === 'signin' ? 'Connexion' : 'Inscription'}
-        </motion.h2>
-        <motion.p 
-          className="text-slate-400"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-        >
+        </h2>
+        <p className="text-slate-400">
           {mode === 'signin' 
             ? 'Accédez à votre espace personnel' 
             : 'Créez votre compte en quelques secondes'
           }
-        </motion.p>
+        </p>
       </div>
       
       <form onSubmit={handleSubmit} className="space-y-6">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-        >
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
-            <Input
-              label="Email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="pl-12"
-              placeholder="votre@email.com"
-            />
-          </div>
-        </motion.div>
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+          <Input
+            label="Email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="pl-12"
+            placeholder="votre@email.com"
+          />
+        </div>
         
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-        >
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
-            <Input
-              label="Mot de passe"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              className="pl-12"
-              placeholder="••••••••"
-            />
-          </div>
-        </motion.div>
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+          <Input
+            label="Mot de passe"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            minLength={6}
+            className="pl-12"
+            placeholder="••••••••"
+          />
+        </div>
         
         {success && (
           <motion.div 
@@ -151,32 +130,15 @@ export function AuthForm({ mode, onSuccess }: AuthFormProps) {
           </motion.div>
         )}
         
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.6 }}
+        <Button
+          type="submit"
+          className="w-full"
+          loading={loading}
+          disabled={loading}
         >
-          <Button
-            type="submit"
-            className="w-full"
-            loading={loading}
-            glow={true}
-          >
-            {mode === 'signin' ? 'Se connecter' : "S'inscrire"}
-          </Button>
-        </motion.div>
+          {mode === 'signin' ? 'Se connecter' : "S'inscrire"}
+        </Button>
       </form>
-      
-      {mode === 'signin' && (
-        <motion.div 
-          className="mt-6 text-center text-sm text-slate-400"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.7 }}
-        >
-          <p>Pas encore de compte ? Utilisez le bouton ci-dessous pour vous inscrire.</p>
-        </motion.div>
-      )}
     </motion.div>
   )
 }

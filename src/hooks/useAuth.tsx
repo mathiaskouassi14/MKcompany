@@ -9,25 +9,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (error) {
-        console.error('Session error:', error)
-        setLoading(false)
-        return
-      }
-      
-      if (session?.user) {
-        fetchUserProfile(session.user.id)
-      } else {
-        setLoading(false)
-      }
-    })
+    let mounted = true
 
-    // Listen for auth changes
+    const initAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
+        if (!mounted) return
+        
+        if (error) {
+          console.error('Session error:', error)
+          setLoading(false)
+          return
+        }
+        
+        if (session?.user) {
+          await fetchUserProfile(session.user.id)
+        } else {
+          setLoading(false)
+        }
+      } catch (error) {
+        console.error('Init auth error:', error)
+        if (mounted) {
+          setLoading(false)
+        }
+      }
+    }
+
+    initAuth()
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state change:', event, session)
+        if (!mounted) return
+        
         if (session?.user) {
           await fetchUserProfile(session.user.id)
         } else {
@@ -37,13 +51,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     )
 
-    return () => subscription.unsubscribe()
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
   }, [])
 
   const fetchUserProfile = async (userId: string) => {
-    setLoading(true)
     try {
-      console.log('Fetching profile for user:', userId)
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -51,17 +66,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .single()
 
       if (error) {
-        console.error('Profile fetch error details:', error)
-        // Si le profil n'existe pas, on le crée
         if (error.code === 'PGRST116') {
-          console.log('Profile not found, creating new profile')
+          // Profile doesn't exist, create it
           const { data: authUser } = await supabase.auth.getUser()
           if (authUser.user) {
             const newProfile = {
               id: authUser.user.id,
-              email: authUser.user.email,
+              email: authUser.user.email || '',
               full_name: authUser.user.user_metadata?.full_name || null,
-              role: 'user' as const
+              role: 'user' as const,
+              status: 'active' as const
             }
             
             const { data: createdProfile, error: createError } = await supabase
@@ -70,16 +84,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               .select()
               .single()
             
-            if (createError) throw createError
-            setUser(createdProfile)
+            if (createError) {
+              console.error('Profile creation error:', createError)
+              setUser(null)
+            } else {
+              setUser(createdProfile)
+            }
           }
         } else {
           console.error('Profile fetch error:', error)
-          // En cas d'erreur de connexion, on continue sans profil
           setUser(null)
         }
       } else {
-        console.log('Profile found:', data)
         setUser(data)
       }
     } catch (error) {
@@ -91,33 +107,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signIn = async (email: string, password: string) => {
-    console.log('Attempting sign in for:', email)
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
-    if (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Authentication failed'
-      console.error('Sign in error:', errorMessage)
-      throw new Error(errorMessage)
-    }
+    if (error) throw error
   }
 
   const signUp = async (email: string, password: string) => {
-    console.log('Attempting sign up for:', email)
     const { error } = await supabase.auth.signUp({
       email,
       password,
     })
-    if (error) {
-      console.error('Sign up error:', error)
-      throw error
-    }
+    if (error) throw error
   }
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut()
     if (error) throw error
+    setUser(null)
   }
 
   const updateProfile = async (data: Partial<User>) => {
